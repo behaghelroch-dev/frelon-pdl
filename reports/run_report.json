@@ -1,0 +1,141 @@
+{
+  "pipeline": "frelonwatch-pdl",
+  "executed_at": "2026-09-23T09:01:42Z",
+  "source_run": "gbif_20260923T090142Z",
+  "source_collected_at": "2026-09-23T09:01:42Z",
+  "demo_invalid_rows_injected": false,
+  "input_rows": 1750,
+  "accepted_rows": 1638,
+  "rejected_rows": 112,
+  "duplicates_removed": 109,
+  "curated_rows": 1529,
+  "deduplication": {
+    "technical_duplicates_removed": 0,
+    "business_duplicates_removed": 109,
+    "duplicate_groups": 89,
+    "cross_dataset_groups": 20,
+    "cross_dataset_groups_confirmed_by_gbif_cluster": 20
+  },
+  "quality_rules": [
+    {
+      "rule_id": "Q01_coordonnees_presentes",
+      "dimension": "Completude",
+      "condition": "latitude et longitude renseignees",
+      "action": "REJETER",
+      "failures": 0
+    },
+    {
+      "rule_id": "Q02_dans_zone_etude",
+      "dimension": "Domaine",
+      "condition": "point dans l'emprise regionale et dans une commune des Pays de la Loire",
+      "action": "REJETER",
+      "failures": 8
+    },
+    {
+      "rule_id": "Q03_date_valide",
+      "dimension": "Validite",
+      "condition": "date lisible, >= 2004, non future, precision <= 1 an",
+      "action": "REJETER",
+      "failures": 0
+    },
+    {
+      "rule_id": "Q04_incertitude_raisonnable",
+      "dimension": "Domaine",
+      "condition": "incertitude de localisation <= max_uncertainty_m (ou inconnue)",
+      "action": "REJETER",
+      "failures": 104
+    },
+    {
+      "rule_id": "Q05_espece_et_rang",
+      "dimension": "Validite",
+      "condition": "speciesKey = Vespa velutina et rang espece ou infra-specifique",
+      "action": "REJETER",
+      "failures": 0
+    },
+    {
+      "rule_id": "Q06_licence_autorisee",
+      "dimension": "Conformite",
+      "condition": "licence dans CC0 / CC BY 4.0 / CC BY-NC 4.0",
+      "action": "REJETER",
+      "failures": 0
+    },
+    {
+      "rule_id": "Q07_presence_confirmee",
+      "dimension": "Coherence",
+      "condition": "occurrenceStatus = PRESENT (pas de donnee d'absence)",
+      "action": "REJETER",
+      "failures": 0
+    },
+    {
+      "rule_id": "Q08_incertitude_connue",
+      "dimension": "Completude",
+      "condition": "incertitude de localisation renseignee",
+      "action": "SIGNALER",
+      "failures": 340
+    },
+    {
+      "rule_id": "Q09_unicite_cle_metier",
+      "dimension": "Unicite",
+      "condition": "cle (espece, jour, point arrondi a 100 m) unique",
+      "action": "DEDUPLIQUER",
+      "failures": 109
+    }
+  ],
+  "alerts": [
+    {
+      "rule_id": "Q10_fraicheur",
+      "dimension": "Fraicheur",
+      "condition": "derniere observation datant de moins de 120 jours",
+      "action": "ALERTER",
+      "last_observation": "2026-09-04",
+      "age_days": 19,
+      "failures": 0
+    },
+    {
+      "rule_id": "Q11_collecte_complete",
+      "dimension": "Completude",
+      "condition": "recu = annonce pour chaque tranche, et somme des tranches = total de la zone",
+      "action": "ALERTER",
+      "failures": 1,
+      "details": [],
+      "records_without_year_not_collected": 17
+    },
+    {
+      "rule_id": "Q12_absence_donnees_personnelles",
+      "dimension": "Conformite",
+      "condition": "aucune valeur des champs personnels raw dans les fichiers curated / rejected",
+      "action": "ALERTER",
+      "values_checked": 980,
+      "failures": 0
+    }
+  ],
+  "personal_data": {
+    "removed_columns": [
+      "_pii_recordedBy",
+      "_pii_identifiedBy",
+      "_pii_rightsHolder",
+      "_pii_http://unknown.org/nick",
+      "_pii_verbatimLocality",
+      "_pii_locality",
+      "_pii_occurrenceRemarks",
+      "_pii_recordedByIDs",
+      "_pii_identifiedByIDs"
+    ],
+    "rows_with_observer_name_in_raw": 1582,
+    "coordinates_generalised_to_decimals": 3
+  },
+  "kpi": {
+    "communes_colonised_total": 453,
+    "new_communes_2025": 17,
+    "new_communes_per_year_avg_last_5_years": 12.8,
+    "communes_newly_colonised_last_12_months": 8
+  },
+  "database": {
+    "rows_before": 1529,
+    "rows_after": 1529,
+    "inserted": 0,
+    "updated_or_unchanged": 1529
+  },
+  "quality_status": "PASS_WITH_WARNINGS",
+  "duration_seconds": 22.0
+}

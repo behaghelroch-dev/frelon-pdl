@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.env
+*.log
+*.tmp
+
+# Zone raw : les collectes completes contiennent des noms d'observateurs -> jamais versionnees
+data/raw/*
+!data/raw/sample_source.json
+
+# Caches de referentiels (retelecharges automatiquement) et sorties regenerables
+data/reference/
+data/demo/
+data/curated/*.sqlite
+reports/runs/

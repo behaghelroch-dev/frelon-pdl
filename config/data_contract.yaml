@@ -1,0 +1,72 @@
+dataset: frelon_asiatique_pdl_observations
+version: 1.0
+owner: Roch Behaghel (ESEO, module Architectures BD et collecte de donnees)
+description: >
+  Signalements de presence du frelon asiatique (Vespa velutina) dans les
+  Pays de la Loire, dedupliques entre sources et rattaches a une commune.
+grain: >
+  Une ligne represente un signalement de presence du frelon asiatique en un
+  lieu (arrondi a ~100 m) a une date donnee, toutes sources GBIF confondues.
+primary_key: observation_key
+update_frequency: hebdomadaire (collecte complete + remplacement du snapshot)
+
+sources:
+  - name: GBIF occurrence search API
+    url: https://api.gbif.org/v1/occurrence/search
+    filter: taxonKey=1311477, gadmGid=FRA.12_1, country=FR, decoupage par annee
+    licence: par enregistrement - CC0 1.0, CC BY 4.0 ou CC BY-NC 4.0
+  - name: API Geo (contours des communes)
+    url: https://geo.api.gouv.fr/communes?codeRegion=52
+    licence: Licence Ouverte Etalab 2.0
+
+fields:
+  - {name: observation_key, type: string, required: true, description: "Hash SHA-1 (16 car.) de espece|jour|lat arrondie|lon arrondie"}
+  - {name: gbif_id, type: integer, required: true, unique: true, description: "Identifiant GBIF de l'enregistrement conserve"}
+  - {name: observed_date, type: date, required: true, description: "Jour de l'observation (debut de periode si intervalle)"}
+  - {name: observed_at_utc, type: datetime, required: false, description: "Horodatage UTC si l'heure est connue"}
+  - {name: date_precision_days, type: integer, required: true, description: "Largeur de la periode d'observation en jours (1 = jour exact)"}
+  - {name: year, type: integer, required: true}
+  - {name: month, type: integer, required: false, description: "Vide si precision > 31 jours"}
+  - {name: bio_phase, type: string, required: false, allowed: [printemps_fondatrices, ete_ouvrieres, automne_reproduction, hiver_hivernage]}
+  - {name: latitude, type: number, required: true, description: "WGS84, arrondie a 3 decimales"}
+  - {name: longitude, type: number, required: true, description: "WGS84, arrondie a 3 decimales"}
+  - {name: coordinate_uncertainty_m, type: number, required: false, range: [0, 5000]}
+  - {name: precision_class, type: string, required: true, allowed: [precise_100m, moyenne_1km, faible_5km, inconnue]}
+  - {name: commune_insee, type: string, required: true, description: "Code INSEE de la commune (API Geo)"}
+  - {name: commune_nom, type: string, required: true}
+  - {name: departement_code, type: string, required: true, allowed: ["44", "49", "53", "72", "85"]}
+  - {name: taxon_name, type: string, required: true}
+  - {name: taxon_rank, type: string, required: true, allowed: [SPECIES, SUBSPECIES, VARIETY, FORM]}
+  - {name: basis_of_record, type: string, required: true, description: "Type d'enregistrement Darwin Core (HUMAN_OBSERVATION...)"}
+  - {name: source_channel, type: string, required: true, description: "Plateforme ou inventaire d'origine (normalisee)"}
+  - {name: dataset_key, type: string, required: true}
+  - {name: license_code, type: string, required: true, allowed: [CC0_1_0, CC_BY_4_0, CC_BY_NC_4_0]}
+  - {name: attribution_required, type: boolean, required: true}
+  - {name: non_commercial_only, type: boolean, required: true}
+  - {name: n_source_records, type: integer, required: true, description: "Nombre d'enregistrements GBIF fusionnes"}
+  - {name: n_source_datasets, type: integer, required: true}
+  - {name: source_gbif_ids, type: string, required: true, description: "Identifiants GBIF fusionnes, separes par ;"}
+  - {name: gbif_cluster_flag, type: boolean, required: true, description: "GBIF signale lui-meme un doublon potentiel"}
+  - {name: is_first_in_commune, type: boolean, required: true, description: "Premiere observation connue dans la commune"}
+  - {name: quality_flags, type: string, required: false}
+  - {name: source_file, type: string, required: true, description: "Fichier raw d'origine (tracabilite)"}
+  - {name: processed_at, type: datetime, required: true}
+
+excluded_fields_gdpr:
+  - recordedBy, identifiedBy, rightsHolder, nick (noms et pseudos des observateurs)
+  - verbatimLocality, locality, occurrenceRemarks (adresses, texte libre)
+  - recordedByIDs, identifiedByIDs (ORCID et identifiants personnels)
+
+quality_rules:
+  - {id: Q01_coordonnees_presentes, dimension: Completude, action: rejeter}
+  - {id: Q02_dans_zone_etude, dimension: Domaine, action: rejeter}
+  - {id: Q03_date_valide, dimension: Validite, action: rejeter, detail: ">= 2004, non future, precision <= 366 j"}
+  - {id: Q04_incertitude_raisonnable, dimension: Domaine, action: rejeter, detail: "<= 5000 m"}
+  - {id: Q05_espece_et_rang, dimension: Validite, action: rejeter}
+  - {id: Q06_licence_autorisee, dimension: Conformite, action: rejeter}
+  - {id: Q07_presence_confirmee, dimension: Coherence, action: rejeter}
+  - {id: Q08_incertitude_connue, dimension: Completude, action: signaler}
+  - {id: Q09_unicite_cle_metier, dimension: Unicite, action: dedupliquer}
+  - {id: Q10_fraicheur, dimension: Fraicheur, action: alerter, detail: "derniere observation < 120 j"}
+  - {id: Q11_collecte_complete, dimension: Completude, action: alerter}
+  - {id: Q12_absence_donnees_personnelles, dimension: Conformite, action: "alerter + statut FAIL"}

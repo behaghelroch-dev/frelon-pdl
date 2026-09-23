@@ -1,0 +1,52 @@
+# Configuration du pipeline FrelonWatch PDL.
+# Aucun secret : l'API GBIF et l'API Geo sont publiques et sans cle.
+
+source:
+  name: gbif
+  base_url: https://api.gbif.org/v1/occurrence/search
+  species_name: Vespa velutina          # resolu en taxonKey via /species/match
+  taxon_key: 1311477                    # valeur attendue (verifiee au lancement)
+  gadm_gid: FRA.12_1                    # region Pays de la Loire (GADM niveau 1)
+  country: FR
+  page_size: 300                        # maximum autorise par l'API
+  max_offset: 100000                    # plafond GBIF par requete
+  # Decoupage de la collecte : un bloc "historique" puis une requete par annee.
+  historical_range: "1600,2003"         # 1er signalement en France : 2004
+  first_year: 2004
+  timeout_seconds: 30
+  max_retries: 4
+  backoff_seconds: 2
+  pause_between_pages: 0.2              # politesse envers l'API
+
+reference:
+  name: api_geo_communes
+  url: https://geo.api.gouv.fr/communes
+  params:
+    codeRegion: "52"                    # code INSEE de la region Pays de la Loire
+    format: geojson
+    geometry: contour
+    fields: code,nom,codeDepartement,codeRegion,population
+  cache_file: data/reference/communes_pdl.geojson
+  max_age_days: 30
+
+quality:
+  min_year: 2004
+  max_uncertainty_m: 5000               # au-dela, la commune n'est pas fiable
+  expected_species_key: 1311477
+  accepted_ranks: [SPECIES, SUBSPECIES, VARIETY, FORM]
+  allowed_licenses: [CC0_1_0, CC_BY_4_0, CC_BY_NC_4_0]
+  accepted_occurrence_status: [PRESENT]
+  bbox:                                  # emprise large de la region
+    min_lat: 46.26
+    max_lat: 48.57
+    min_lon: -2.63
+    max_lon: 0.92
+  freshness_max_days: 120               # alerte si derniere observation plus ancienne
+  dedup_coord_decimals: 3               # ~100 m pour la cle metier
+
+paths:
+  raw_dir: data/raw
+  curated_dir: data/curated
+  rejected_dir: data/rejected
+  reports_dir: reports
+  database: data/curated/frelon_pdl.sqlite
