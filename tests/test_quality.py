@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 import sys
 from pathlib import Path
 
@@ -215,3 +216,56 @@ def test_q11_alerts_when_records_without_year_not_recovered():
                 "records_without_year_estimate": 17, "records_recovered_from_scan": 0}
     alert = check_collect_volume(manifest)
     assert alert["failures"] == 1 and alert["records_without_year_not_collected"] == 17
+
+
+def _curated(*rows) -> pd.DataFrame:
+    kept, _ = deduplicate(pd.DataFrame(list(rows)), 3)
+    kept["quality_flags"] = ""
+    return to_curated(kept, 3)
+
+
+def _db_rows(db) -> dict:
+    with sqlite3.connect(db) as conn:
+        return {r[0]: r[1:] for r in conn.execute(
+            "SELECT gbif_id, is_active, first_seen_run, last_seen_run, removed_at_run FROM observations")}
+
+
+def test_disappeared_observation_is_marked_inactive_then_reactivated(tmp_path):
+    db = tmp_path / "t.sqlite"
+    a, b = make_row(gbif_id=1), make_row(gbif_id=2, latitude=47.0)
+    upsert_observations(_curated(a, b), db, "run1", full_snapshot=True)
+    stats = upsert_observations(_curated(a), db, "run2", full_snapshot=True)
+    assert stats["marked_removed"] == 1 and stats["active_rows"] == 1 and stats["rows_after"] == 2
+    assert _db_rows(db)[2] == (0, "run1", "run1", "run2")
+    stats = upsert_observations(_curated(a, b), db, "run3", full_snapshot=True)
+    assert stats["reactivated"] == 1 and stats["active_rows"] == 2
+    assert _db_rows(db)[2] == (1, "run1", "run3", None)
+
+
+def test_partial_snapshot_never_marks_removals(tmp_path):
+    db = tmp_path / "t.sqlite"
+    upsert_observations(_curated(make_row(gbif_id=1), make_row(gbif_id=2, latitude=47.0)), db, "run1", True)
+    stats = upsert_observations(_curated(make_row(gbif_id=1)), db, "run2", full_snapshot=False)
+    assert stats["marked_removed"] == 0 and stats["active_rows"] == 2
+
+
+def test_gbif_id_moving_to_new_key_does_not_break_unique_constraint(tmp_path):
+    db = tmp_path / "t.sqlite"
+    upsert_observations(_curated(make_row(gbif_id=1)), db, "run1", True)
+    # GBIF corrige les coordonnees : meme gbif_id, nouvelle cle metier.
+    stats = upsert_observations(_curated(make_row(gbif_id=1, latitude=47.1)), db, "run2", True)
+    assert stats["rekeyed_replaced"] == 1 and stats["rows_after"] == 1 and stats["active_rows"] == 1
+
+
+def test_old_database_is_migrated(tmp_path):
+    db = tmp_path / "t.sqlite"
+    with sqlite3.connect(db) as conn:
+        conn.execute("CREATE TABLE observations (observation_key TEXT PRIMARY KEY, gbif_id INTEGER NOT NULL UNIQUE)")
+        conn.execute("INSERT INTO observations VALUES ('ancienne', 99)")
+    # La table existante n'a que 2 colonnes : on ajoute les autres comme le ferait une vraie v1.
+    with sqlite3.connect(db) as conn:
+        from load import CURATED_COLUMNS
+        for col in CURATED_COLUMNS[2:]:
+            conn.execute(f"ALTER TABLE observations ADD COLUMN {col}")
+    stats = upsert_observations(_curated(make_row(gbif_id=1)), db, "run1", True)
+    assert stats["marked_removed"] == 1 and _db_rows(db)[99] == (0, None, None, "run1")

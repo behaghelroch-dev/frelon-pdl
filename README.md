@@ -68,7 +68,7 @@ python src/pipeline.py --collect        # nouvelle collecte GBIF puis traitement
 python src/pipeline.py                  # retraite la dernière collecte présente en zone raw
 python src/pipeline.py --demo-invalid   # démonstration : 8 lignes piégées (sorties dans data/demo/)
 python src/collect.py --years 2025,2026 # collecte seule, sur quelques années
-python -m pytest -q                     # 29 tests unitaires
+python -m pytest -q                     # 33 tests unitaires
 ```
 
 Toute la configuration (espèce, zone, seuils de qualité, chemins) est dans `config/pipeline.yaml`.
@@ -165,6 +165,18 @@ l'inventaire national Frelon du MNHN.
 SQLite utilise `observation_key` comme clé primaire avec `INSERT … ON CONFLICT DO UPDATE` (UPSERT) et
 une contrainte `UNIQUE` sur `gbif_id`. Une seconde exécution donne `inserted: 0`, `rows_after: 1530`.
 
+**Historisation des snapshots** : le CSV est un snapshot de la dernière collecte, alors que la base garde
+l'historique. Quatre colonnes propres à la base suivent chaque ligne : `is_active`, `first_seen_run`,
+`last_seen_run` et `removed_at_run` (identifiant de la collecte). Une observation absente d'une nouvelle
+collecte n'est pas supprimée : elle passe à `is_active = 0` (suppression logique), et elle est réactivée
+si elle réapparaît. Ce marquage n'a lieu que si la collecte est **complète** (toute la zone, Q11 sans
+échec) : une collecte partielle (`--years`) ou incomplète ne peut donc pas « supprimer » de lignes à
+tort. Si GBIF corrige les coordonnées ou la date d'un enregistrement, sa clé métier change : l'ancienne
+ligne est remplacée, sans violer la contrainte `UNIQUE` sur `gbif_id`. Le rapport d'exécution donne
+`marked_removed`, `reactivated`, `rekeyed_replaced` et `active_rows`. Pour lire les observations
+actuelles : `SELECT * FROM observations WHERE is_active = 1`. Les lignes chargées avant l'ajout du suivi
+ont un `first_seen_run` vide.
+
 ## Rapport d'exécution
 
 Chaque exécution écrit `reports/run_report.json` (et une copie historisée dans `reports/runs/`) :
@@ -193,8 +205,6 @@ qu'aucun nom ne se retrouve dans les sorties. Justification détaillée :
 - **Clé métier à environ 100 m** : deux plateformes qui arrondissent différemment la même observation
   (centroïde de commune contre point GPS) ne sont pas fusionnées. Amélioration : s'appuyer sur l'API de
   clustering GBIF (`/occurrence/{id}/experimental/related`).
-- **Snapshot complet** : une observation supprimée de GBIF disparaît du CSV mais reste en base SQLite.
-  Amélioration : marquer les lignes absentes du dernier snapshot.
 - **Passage en production** : planification hebdomadaire (cron ou GitHub Actions), téléchargement GBIF
   avec DOI pour la citation, tableau de bord cartographique pour les apiculteurs, et une seconde source
   terrain (signalements des GDSA).

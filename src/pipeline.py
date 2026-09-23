@@ -143,7 +143,10 @@ def run(config_path: str | None = None, run_dir: str | None = None,
         ["recordedBy", "identifiedBy", "rightsHolder", "http://unknown.org/nick"]))
 
     db_path = project_path(paths["database"])
-    db_stats = upsert_observations(curated, db_path)
+    # Suppression logique uniquement si la collecte est complete (zone entiere, Q11 sans echec).
+    q11 = next(a for a in alerts if a["rule_id"] == "Q11_collecte_complete")
+    full_snapshot = manifest.get("records_announced_total") is not None and q11["failures"] == 0
+    db_stats = upsert_observations(curated, db_path, run_path.name, full_snapshot)
     replace_table(communes_df, "communes_first_seen", db_path)
     replace_table(progression_df, "progression_annuelle", db_path)
 

@@ -1,6 +1,6 @@
 {
   "pipeline": "frelonwatch-pdl",
-  "executed_at": "2026-09-23T09:18:19Z",
+  "executed_at": "2026-09-23T09:31:04Z",
   "source_run": "gbif_20260923T091718Z",
   "source_collected_at": "2026-09-23T09:17:18Z",
   "demo_invalid_rows_injected": false,
@@ -135,8 +135,13 @@
     "rows_before": 1530,
     "rows_after": 1530,
     "inserted": 0,
-    "updated_or_unchanged": 1530
+    "updated_or_unchanged": 1530,
+    "rekeyed_replaced": 0,
+    "reactivated": 0,
+    "snapshot_complete": true,
+    "marked_removed": 0,
+    "active_rows": 1530
   },
   "quality_status": "PASS_WITH_WARNINGS",
-  "duration_seconds": 2.02
+  "duration_seconds": 2.05
 }
