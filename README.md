@@ -19,10 +19,10 @@ Le cadrage détaillé de la séance 1 (fiche, cas d'usage, KPI, grain, dictionna
 
 | Indicateur | Valeur |
 |---|---|
-| Observations collectées (raw) | 1 750 |
-| Rejetées (avec cause) | 112 |
+| Observations collectées (raw) | 1 767 |
+| Rejetées (avec cause) | 128 |
 | Doublons fusionnés | 109, dont 20 groupes inter-plateformes, tous confirmés par le clustering GBIF |
-| Observations curated | 1 529 |
+| Observations curated | 1 530 |
 | Communes colonisées depuis 2008 | 453 |
 | Nouvelles communes en 2025 | 17 |
 | Communes touchées pour la première fois ces 12 derniers mois | 8 |
@@ -64,11 +64,11 @@ pip install -r requirements.txt
 ## Exécution
 
 ```bash
-python src/pipeline.py --collect        # nouvelle collecte GBIF puis traitement complet (~40 s)
+python src/pipeline.py --collect        # nouvelle collecte GBIF puis traitement complet (~30 s)
 python src/pipeline.py                  # retraite la dernière collecte présente en zone raw
 python src/pipeline.py --demo-invalid   # démonstration : 8 lignes piégées (sorties dans data/demo/)
 python src/collect.py --years 2025,2026 # collecte seule, sur quelques années
-python -m pytest -q                     # 27 tests unitaires
+python -m pytest -q                     # 29 tests unitaires
 ```
 
 Toute la configuration (espèce, zone, seuils de qualité, chemins) est dans `config/pipeline.yaml`.
@@ -85,7 +85,10 @@ Aucun secret n'est nécessaire.
 
 1. **Collecte** (`collect.py`) : une requête par année (plus un bloc historique 1600-2003), pour rester
    sous le plafond de 100 000 résultats par requête. Pages de 300 lignes, relances exponentielles sur
-   les erreurs 429 et 5xx, abandon propre sur les erreurs 4xx. Chaque page est écrite **octet pour
+   les erreurs 429 et 5xx, abandon propre sur les erreurs 4xx.
+   Un **balayage complémentaire** sans filtre d'année (fichiers `scan_all_*.json`) récupère ensuite les
+   observations qu'aucune tranche annuelle ne renvoie, car GBIF ne sait pas filtrer sur une année
+   absente. L'extraction ne garde de ce balayage que les `gbifID` absents des tranches. Chaque page est écrite **octet pour
    octet** dans `data/raw/gbif_<horodatage>/`, avec un `manifest.json` qui trace la requête et les
    comptes.
 2. **Profilage** (`profile_data.py`) : `reports/profile_raw.json` contient les types, les valeurs
@@ -125,18 +128,18 @@ frelon-pdl/
 |---|---|---|---|---|
 | Q01 | Complétude | latitude et longitude renseignées | Rejeter | 0 |
 | Q02 | Domaine | point dans une commune des Pays de la Loire | Rejeter | 8 |
-| Q03 | Validité | date lisible, ≥ 2004, non future, précision ≤ 1 an | Rejeter | 0 |
-| Q04 | Domaine | incertitude de localisation ≤ 5 000 m | Rejeter | **104** |
+| Q03 | Validité | date lisible, ≥ 2004, non future, précision ≤ 1 an | Rejeter | 16 |
+| Q04 | Domaine | incertitude de localisation ≤ 5 000 m | Rejeter | **106** |
 | Q05 | Validité | espèce *Vespa velutina*, rang espèce ou infra-spécifique | Rejeter | 0 |
 | Q06 | Conformité | licence CC0, CC BY ou CC BY-NC | Rejeter | 0 |
 | Q07 | Cohérence | `occurrenceStatus = PRESENT` | Rejeter | 0 |
 | Q08 | Complétude | incertitude de localisation renseignée | Signaler | 340 |
 | Q09 | Unicité | clé métier unique | Dédupliquer | 109 |
 | Q10 | Fraîcheur | dernière observation datant de moins de 120 jours | Alerter | 0 (19 j) |
-| Q11 | Complétude | reçu = annoncé, et somme des tranches = total | Alerter | 1 |
-| Q12 | Conformité | aucun nom d'observateur dans les sorties | Alerter (statut FAIL) | 0 / 980 noms |
+| Q11 | Complétude | reçu = annoncé, et tranches + balayage complémentaire = total | Alerter | 0 |
+| Q12 | Conformité | aucun nom d'observateur dans les sorties | Alerter (statut FAIL) | 0 / 993 noms |
 
-La règle qui rejette le plus est **Q04** : 104 observations ont une localisation à plus de 5 km, ce qui
+La règle qui rejette le plus est **Q04** : 106 observations ont une localisation à plus de 5 km, ce qui
 ne permet pas d'attribuer une commune de façon fiable. Les rejets Q02 sont des points sur l'estran ou
 juste au-delà de la limite régionale, car les contours GADM utilisés par GBIF diffèrent légèrement des
 contours INSEE.
@@ -160,7 +163,7 @@ l'inventaire national Frelon du MNHN.
 
 **Rejeu** : les CSV sont réécrits de façon atomique (fichier temporaire puis remplacement), et la base
 SQLite utilise `observation_key` comme clé primaire avec `INSERT … ON CONFLICT DO UPDATE` (UPSERT) et
-une contrainte `UNIQUE` sur `gbif_id`. Une seconde exécution donne `inserted: 0`, `rows_after: 1529`.
+une contrainte `UNIQUE` sur `gbif_id`. Une seconde exécution donne `inserted: 0`, `rows_after: 1530`.
 
 ## Rapport d'exécution
 
@@ -184,9 +187,9 @@ qu'aucun nom ne se retrouve dans les sorties. Justification détaillée :
   (moins de données de l'inventaire national), pas un ralentissement de l'espèce. Les signalements
   terrain des GDSA (plateforme Frelon asiatique, déclarations en mairie) ne sont pas sur GBIF. Une
   absence d'observation ne signifie pas une absence de frelon.
-- **17 observations sans année** ne sont renvoyées par aucune tranche annuelle. L'alerte Q11 les
-  signale. Amélioration : une requête complémentaire sans filtre d'année, puis une différence par
-  `gbifID`.
+- **Observations sans année** : 17 enregistrements n'ont pas de date exploitable (champ vide ou
+  intervalle de plusieurs années). Le balayage complémentaire les récupère, et Q03 en rejette 16 avec
+  leur cause. La dernière, datée par un intervalle de 365 jours, est acceptée sans mois ni phase.
 - **Clé métier à environ 100 m** : deux plateformes qui arrondissent différemment la même observation
   (centroïde de commune contre point GPS) ne sont pas fusionnées. Amélioration : s'appuyer sur l'API de
   clustering GBIF (`/occurrence/{id}/experimental/related`).

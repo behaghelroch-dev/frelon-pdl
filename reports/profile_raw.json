@@ -1,5 +1,5 @@
 {
-  "rows": 1750,
+  "rows": 1767,
   "columns": 35,
   "dtypes": {
     "gbifID": "object",
@@ -16,7 +16,7 @@
     "decimalLongitude": "float64",
     "coordinateUncertaintyInMeters": "float64",
     "eventDate": "object",
-    "year": "int64",
+    "year": "float64",
     "month": "float64",
     "day": "float64",
     "license": "object",
@@ -39,36 +39,36 @@
     "source_file": "object"
   },
   "missing_rate": {
-    "occurrenceRemarks": 0.9811,
-    "individualCount": 0.9371,
-    "lifeStage": 0.8931,
-    "verbatimLocality": 0.8366,
-    "http://unknown.org/nick": 0.8366,
-    "datasetName": 0.8366,
-    "references": 0.836,
-    "locality": 0.8263,
-    "rightsHolder": 0.7737,
-    "institutionCode": 0.6366,
-    "coordinateUncertaintyInMeters": 0.1943,
-    "identifiedBy": 0.1274,
-    "recordedBy": 0.096,
-    "month": 0.0069,
-    "day": 0.0069,
+    "occurrenceRemarks": 0.9728,
+    "individualCount": 0.9377,
+    "lifeStage": 0.8942,
+    "verbatimLocality": 0.8381,
+    "http://unknown.org/nick": 0.8381,
+    "datasetName": 0.8381,
+    "references": 0.8376,
+    "locality": 0.828,
+    "rightsHolder": 0.7759,
+    "institutionCode": 0.6401,
+    "coordinateUncertaintyInMeters": 0.1924,
+    "identifiedBy": 0.1268,
+    "recordedBy": 0.0951,
+    "month": 0.0164,
+    "day": 0.0164,
+    "year": 0.0096,
+    "eventDate": 0.0085,
     "occurrenceID": 0.0006,
     "gbifID": 0.0,
     "datasetKey": 0.0,
-    "speciesKey": 0.0,
-    "isInCluster": 0.0,
     "license": 0.0,
-    "eventDate": 0.0,
-    "year": 0.0,
-    "decimalLongitude": 0.0,
+    "isInCluster": 0.0,
+    "occurrenceStatus": 0.0,
+    "speciesKey": 0.0,
     "scientificName": 0.0,
     "taxonRank": 0.0,
     "decimalLatitude": 0.0,
-    "occurrenceStatus": 0.0,
-    "basisOfRecord": 0.0,
     "publishingOrgKey": 0.0,
+    "basisOfRecord": 0.0,
+    "decimalLongitude": 0.0,
     "issues": 0.0,
     "recordedByIDs": 0.0,
     "identifiedByIDs": 0.0,
@@ -77,7 +77,7 @@
   },
   "exact_duplicate_rows": 0,
   "duplicate_gbif_ids": 0,
-  "duplicate_business_keys_date_point100m": 125,
+  "duplicate_business_keys_date_point100m": 130,
   "in_gbif_cluster": 86,
   "numeric_ranges": {
     "decimalLatitude": {
@@ -105,48 +105,48 @@
     "10": 1454,
     "19": 176,
     "16": 106,
-    "21": 8,
-    "4": 4,
+    "4": 19,
+    "21": 10,
     "20": 2
   },
   "top_values": {
     "datasetName": {
-      "<vide>": 1464,
+      "<vide>": 1481,
       "iNaturalist research-grade observations": 286
     },
     "institutionCode": {
-      "<vide>": 1114,
+      "<vide>": 1131,
       "CardObs": 345,
       "iNaturalist": 286,
       "UMS PatriNat": 4,
       "NABU|naturgucker": 1
     },
     "basisOfRecord": {
-      "HUMAN_OBSERVATION": 1748,
+      "HUMAN_OBSERVATION": 1765,
       "PRESERVED_SPECIMEN": 2
     },
     "taxonRank": {
-      "SUBSPECIES": 1282,
-      "SPECIES": 468
+      "SUBSPECIES": 1283,
+      "SPECIES": 484
     },
     "license": {
-      "http://creativecommons.org/licenses/by/4.0/legalcode": 1043,
+      "http://creativecommons.org/licenses/by/4.0/legalcode": 1060,
       "http://creativecommons.org/licenses/by-nc/4.0/legalcode": 695,
       "http://creativecommons.org/publicdomain/zero/1.0/legalcode": 12
     },
     "occurrenceStatus": {
-      "PRESENT": 1750
+      "PRESENT": 1767
     }
   },
   "personal_fields_filled": {
-    "recordedBy": 1582,
-    "identifiedBy": 1527,
+    "recordedBy": 1599,
+    "identifiedBy": 1543,
     "rightsHolder": 396,
     "http://unknown.org/nick": 286,
     "verbatimLocality": 286,
     "locality": 304,
-    "occurrenceRemarks": 33,
-    "recordedByIDs": 1750,
-    "identifiedByIDs": 1750
+    "occurrenceRemarks": 48,
+    "recordedByIDs": 1767,
+    "identifiedByIDs": 1767
   }
 }

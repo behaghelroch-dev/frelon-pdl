@@ -17,7 +17,8 @@ from reference import Commune, CommuneLocator  # noqa: E402
 from transform import (  # noqa: E402
     deduplicate, drop_personal_data, license_code, normalize_channel, parse_event_date, to_curated,
 )
-from validate import apply_rules  # noqa: E402
+from extract import read_run  # noqa: E402
+from validate import apply_rules, check_collect_volume  # noqa: E402
 
 Q = load_config()["quality"]
 
@@ -192,3 +193,25 @@ def test_collector_retries_then_fails(monkeypatch):
     cfg = load_config()["source"]
     with pytest.raises(collect.CollectError):
         collect.http_get("https://example.org", {}, cfg)
+
+
+def test_complement_scan_only_adds_records_missing_from_year_chunks(tmp_path):
+    manifest = {"chunks": [{"year": "2024", "expected": 2, "received": 2}], "records_without_year_estimate": 1}
+    (tmp_path / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    (tmp_path / "page_year-2024_offset-000000.json").write_text(
+        json.dumps({"results": [{"gbifID": "1", "year": 2024}, {"gbifID": "2", "year": 2024}]}), encoding="utf-8")
+    (tmp_path / "scan_all_offset-000000.json").write_text(
+        json.dumps({"results": [{"gbifID": "1"}, {"gbifID": "2"}, {"gbifID": "3", "eventDate": None}]}),
+        encoding="utf-8")
+    df, man = read_run(tmp_path)
+    assert sorted(df["gbifID"]) == ["1", "2", "3"]
+    assert man["records_recovered_from_scan"] == 1
+    assert df.loc[df["gbifID"] == "3", "source_file"].iloc[0].endswith("scan_all_offset-000000.json")
+    assert check_collect_volume(man)["failures"] == 0
+
+
+def test_q11_alerts_when_records_without_year_not_recovered():
+    manifest = {"chunks": [{"year": "2024", "expected": 5, "received": 5}],
+                "records_without_year_estimate": 17, "records_recovered_from_scan": 0}
+    alert = check_collect_volume(manifest)
+    assert alert["failures"] == 1 and alert["records_without_year_not_collected"] == 17

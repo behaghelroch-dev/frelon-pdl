@@ -36,17 +36,33 @@ def latest_run_dir(raw_dir: Path) -> Path:
     return runs[-1]
 
 
+def _row(rec: dict, source_file: str) -> dict:
+    row = {field: rec.get(field) for field in RAW_FIELDS + PERSONAL_FIELDS}
+    gadm = rec.get("gadm") or {}
+    row["gadm_level2"] = (gadm.get("level2") or {}).get("name")
+    row["source_file"] = source_file
+    return row
+
+
 def read_run(run_dir: Path) -> tuple[pd.DataFrame, dict]:
     manifest = json.loads((run_dir / "manifest.json").read_text(encoding="utf-8"))
-    records = []
+    records, seen = [], set()
     for page in sorted(run_dir.glob("page_*.json")):
         payload = json.loads(page.read_text(encoding="utf-8"))
         for rec in payload.get("results", []):
-            row = {field: rec.get(field) for field in RAW_FIELDS + PERSONAL_FIELDS}
-            gadm = rec.get("gadm") or {}
-            row["gadm_level2"] = (gadm.get("level2") or {}).get("name")
-            row["source_file"] = f"{run_dir.name}/{page.name}"
-            records.append(row)
+            records.append(_row(rec, f"{run_dir.name}/{page.name}"))
+            seen.add(rec.get("gbifID"))
+    # Balayage complementaire : seules les observations absentes des tranches
+    # annuelles (sans annee exploitable) sont reprises.
+    recovered = 0
+    for page in sorted(run_dir.glob("scan_*.json")):
+        payload = json.loads(page.read_text(encoding="utf-8"))
+        for rec in payload.get("results", []):
+            if rec.get("gbifID") not in seen:
+                records.append(_row(rec, f"{run_dir.name}/{page.name}"))
+                seen.add(rec.get("gbifID"))
+                recovered += 1
+    manifest["records_recovered_from_scan"] = recovered
     df = pd.DataFrame.from_records(records, columns=RAW_FIELDS + PERSONAL_FIELDS + ["gadm_level2", "source_file"])
-    log.info("%s lignes lues depuis %s", len(df), run_dir)
+    log.info("%s lignes lues depuis %s (dont %s issues du balayage complementaire)", len(df), run_dir, recovered)
     return df, manifest

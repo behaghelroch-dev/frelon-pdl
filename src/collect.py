@@ -75,26 +75,18 @@ def year_chunks(cfg: dict, years: list[int] | None) -> list[str]:
     return [cfg["historical_range"]] + [str(y) for y in range(cfg["first_year"], current_year + 1)]
 
 
-def collect_chunk(cfg: dict, taxon_key: int, year: str, run_dir: Path) -> dict:
-    """Pagine une tranche d'annees et ecrit chaque page brute sur disque."""
-    base_params = {
-        "taxonKey": taxon_key,
-        "gadmGid": cfg["gadm_gid"],
-        "country": cfg["country"],
-        "year": year,
-        "limit": cfg["page_size"],
-    }
+def paginate(cfg: dict, params: dict, file_stem: str, run_dir: Path, label: str) -> dict:
+    """Pagine une requete et ecrit chaque page brute sur disque."""
     offset, pages, records, expected = 0, 0, 0, None
     while True:
-        params = {**base_params, "offset": offset}
-        response = http_get(cfg["base_url"], params, cfg)
+        response = http_get(cfg["base_url"], {**params, "limit": cfg["page_size"], "offset": offset}, cfg)
         payload = response.json()
         if expected is None:
             expected = payload.get("count", 0)
             if expected > cfg["max_offset"]:
-                raise CollectError(f"Tranche {year} trop volumineuse ({expected}) : redecouper par mois")
+                raise CollectError(f"Tranche {label} trop volumineuse ({expected}) : redecouper par mois")
 
-        page_file = run_dir / f"page_year-{year.replace(',', '-')}_offset-{offset:06d}.json"
+        page_file = run_dir / f"{file_stem}_offset-{offset:06d}.json"
         # On ecrit le texte recu, octet pour octet : c'est la copie brute non modifiee.
         page_file.write_bytes(response.content)
 
@@ -105,15 +97,41 @@ def collect_chunk(cfg: dict, taxon_key: int, year: str, run_dir: Path) -> dict:
             break
         offset += cfg["page_size"]
         if offset >= cfg["max_offset"]:
-            raise CollectError(f"Plafond de pagination atteint pour {year}")
+            raise CollectError(f"Plafond de pagination atteint pour {label}")
         time.sleep(cfg["pause_between_pages"])
 
-    log.info("Annee %-10s : %5s observations annoncees, %5s recues (%s pages)", year, expected, records, pages)
-    return {"year": year, "expected": expected, "received": records, "pages": pages}
+    log.info("Tranche %-10s : %5s observations annoncees, %5s recues (%s pages)", label, expected, records, pages)
+    return {"expected": expected, "received": records, "pages": pages}
+
+
+def base_params(cfg: dict, taxon_key: int) -> dict:
+    return {"taxonKey": taxon_key, "gadmGid": cfg["gadm_gid"], "country": cfg["country"]}
+
+
+def collect_chunk(cfg: dict, taxon_key: int, year: str, run_dir: Path) -> dict:
+    """Pagine une tranche d'annees (fichiers page_year-*.json)."""
+    params = {**base_params(cfg, taxon_key), "year": year}
+    stats = paginate(cfg, params, f"page_year-{year.replace(',', '-')}", run_dir, year)
+    return {"year": year, **stats}
+
+
+def collect_complement(cfg: dict, taxon_key: int, run_dir: Path) -> dict | None:
+    """Balayage complet sans filtre d'annee (fichiers scan_all_*.json).
+
+    GBIF ne permet pas de filtrer sur une annee absente : les observations sans
+    date exploitable ne sortent dans aucune tranche annuelle. On relit donc toute
+    la zone ; l'extraction ne garde de ce balayage que les gbifID absents des
+    tranches. Ignore si le total depasse le plafond de pagination.
+    """
+    total = total_count(cfg, taxon_key)
+    if total > cfg["max_offset"]:
+        log.warning("Balayage complementaire ignore : %s observations > plafond %s", total, cfg["max_offset"])
+        return None
+    return paginate(cfg, base_params(cfg, taxon_key), "scan_all", run_dir, "sans filtre")
 
 
 def total_count(cfg: dict, taxon_key: int) -> int:
-    params = {"taxonKey": taxon_key, "gadmGid": cfg["gadm_gid"], "country": cfg["country"], "limit": 0}
+    params = {**base_params(cfg, taxon_key), "limit": 0}
     return http_get(cfg["base_url"], params, cfg).json()["count"]
 
 
@@ -127,6 +145,8 @@ def collect(config_path: str | None = None, years: list[int] | None = None) -> P
 
     taxon_key = resolve_taxon_key(cfg)
     chunks = [collect_chunk(cfg, taxon_key, y, run_dir) for y in year_chunks(cfg, years)]
+
+    complement = None if years else collect_complement(cfg, taxon_key, run_dir)
 
     received = sum(c["received"] for c in chunks)
     announced_total = None if years else total_count(cfg, taxon_key)
@@ -142,7 +162,9 @@ def collect(config_path: str | None = None, years: list[int] | None = None) -> P
         "records_announced_total": announced_total,
         # Les observations sans annee ne sont renvoyees par aucune tranche : on le signale.
         "records_without_year_estimate": None if announced_total is None else announced_total - received,
-        "files": sorted(p.name for p in run_dir.glob("page_*.json")),
+        # Balayage sans filtre d'annee : l'extraction y recupere ces observations.
+        "complement_scan": complement,
+        "files": sorted(p.name for p in run_dir.glob("*.json") if p.name != "manifest.json"),
     }
     (run_dir / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     log.info("Collecte terminee : %s observations dans %s", received, run_dir)

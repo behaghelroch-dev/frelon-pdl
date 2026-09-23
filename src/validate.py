@@ -150,12 +150,16 @@ def check_personal_data_leak(raw: pd.DataFrame, published_texts: list[str], pers
 
 
 def check_collect_volume(manifest: dict) -> dict:
-    """Controle de completude de la collecte (ALERTER) : recu == annonce par tranche."""
+    """Controle de completude de la collecte (ALERTER) : recu == annonce par tranche,
+    et observations hors tranches annuelles recuperees par le balayage complementaire."""
     gaps = [c for c in manifest.get("chunks", []) if c["expected"] != c["received"]]
     without_year = manifest.get("records_without_year_estimate") or 0
+    recovered = manifest.get("records_recovered_from_scan") or 0
+    missing = max(without_year - recovered, 0)
     return {
         "rule_id": "Q11_collecte_complete", "dimension": "Completude",
-        "condition": "recu = annonce pour chaque tranche, et somme des tranches = total de la zone",
-        "action": ALERT, "failures": len(gaps) + (1 if without_year > 0 else 0), "details": gaps,
-        "records_without_year_not_collected": without_year,
+        "condition": "recu = annonce pour chaque tranche, et somme des tranches + balayage = total de la zone",
+        "action": ALERT, "failures": len(gaps) + (1 if missing > 0 else 0), "details": gaps,
+        "records_without_year_recovered": recovered,
+        "records_without_year_not_collected": missing,
     }
