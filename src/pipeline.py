@@ -21,6 +21,7 @@ from config import load_config, project_path
 from extract import latest_run_dir, read_run
 from load import replace_table, upsert_observations
 from profile_data import profile, write_profile
+from restitution import render
 from reference import CommuneLocator, fetch_communes, fetch_dataset_metadata, load_communes
 from transform import communes_first_seen, deduplicate, standardize, to_curated, yearly_progression
 from validate import apply_rules, check_collect_volume, check_freshness, check_personal_data_leak
@@ -149,6 +150,7 @@ def run(config_path: str | None = None, run_dir: str | None = None,
     db_stats = upsert_observations(curated, db_path, run_path.name, full_snapshot)
     replace_table(communes_df, "communes_first_seen", db_path)
     replace_table(progression_df, "progression_annuelle", db_path)
+    figures = render(communes_df, progression_df, communes_file, reports_dir / "figures", executed_at.year)
 
     # 6. Rapport d'execution
     last_full_year = executed_at.year - 1
@@ -185,6 +187,7 @@ def run(config_path: str | None = None, run_dir: str | None = None,
             "communes_newly_colonised_last_12_months": int(communes_df["newly_colonised_last_12_months"].sum()),
         },
         "database": db_stats,
+        "figures": [Path(f).relative_to(project_path(".")).as_posix() for f in figures],
         "quality_status": quality_status(len(curated), rules, alerts),
         "duration_seconds": round(time.perf_counter() - t0, 2),
     }

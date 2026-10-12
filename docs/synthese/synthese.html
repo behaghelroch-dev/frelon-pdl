@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>FrelonWatch PDL — Synthèse</title>
+<style>
+  @page { size: A4; margin: 16mm 17mm 16mm 17mm; }
+  :root { --ink:#1a1a1a; --ink2:#52514e; --muted:#898781; --rule:#d9d8d2; --accent:#256abf; --soft:#f3f2ee; }
+  html, body { background:#fff; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color:var(--ink); font-size:9.6pt; line-height:1.42; margin:0; }
+  h1 { font-size:19pt; margin:0 0 2px; letter-spacing:-0.2px; }
+  .subtitle { color:var(--ink2); font-size:10.5pt; margin:0 0 8px; }
+  .meta { color:var(--muted); font-size:8.5pt; border-bottom:1px solid var(--rule); padding-bottom:8px; margin-bottom:10px; }
+  h2 { font-size:12.2pt; color:var(--accent); margin:14px 0 5px; padding-bottom:2px; border-bottom:1px solid var(--rule); break-after:avoid; }
+  h3 { font-size:10pt; margin:9px 0 3px; break-after:avoid; }
+  p { margin:0 0 6px; text-align:justify; }
+  ul { margin:0 0 6px; padding-left:17px; } li { margin:1px 0; }
+  table { border-collapse:collapse; width:100%; margin:4px 0 8px; font-size:8.5pt; break-inside:avoid; }
+  th, td { border-bottom:1px solid var(--rule); padding:3px 5px; text-align:left; vertical-align:top; }
+  th { background:var(--soft); font-weight:600; }
+  td.n, th.n { text-align:right; white-space:nowrap; }
+  code { font-family: Consolas, "Courier New", monospace; font-size:8.4pt; background:var(--soft); padding:0 2px; border-radius:2px; }
+  .question { background:var(--soft); border-left:3px solid var(--accent); padding:6px 10px; margin:6px 0 8px; font-size:10pt; }
+  .kpis { display:flex; gap:6px; margin:6px 0 8px; }
+  .kpi { flex:1; border:1px solid var(--rule); border-radius:4px; padding:5px 7px; }
+  .kpi b { display:block; font-size:14pt; line-height:1.15; }
+  .kpi span { color:var(--ink2); font-size:7.8pt; }
+  figure { margin:6px 0 8px; text-align:center; break-inside:avoid; }
+  figure img { max-width:100%; }
+  figcaption { color:var(--ink2); font-size:8pt; margin-top:2px; }
+  .note { color:var(--ink2); font-size:8.6pt; }
+  pre { font-family: Consolas, monospace; font-size:8.2pt; background:var(--soft); padding:6px 8px; margin:4px 0 8px; white-space:pre-wrap; }
+</style>
+</head>
+<body>
+
+<h1>FrelonWatch PDL</h1>
+<p class="subtitle">Collecte, contrôle qualité et restitution des observations du frelon asiatique en Pays de la Loire</p>
+<div class="meta">Roch Behaghel · ESEO 2026-2027 · Module <i>Architectures BD et collecte de données</i> · Projet final ·
+Dépôt : <code>github.com/behaghelroch-dev/frelon-pdl</code> · Données du 12/10/2026</div>
+
+<h2>1. Problème, utilisateur et question</h2>
+<p>Le frelon asiatique (<i>Vespa velutina</i>), arrivé en France en 2004, décime les ruchers de l'Ouest. Le moyen de
+lutte le plus efficace est le <b>piégeage des fondatrices au printemps</b> (février à mai), à condition de savoir où piéger. Or les
+signalements sont dispersés entre plusieurs plateformes (iNaturalist, CardObs, INPN, inventaire national Frelon du MNHN…), souvent
+publiés en double, et jamais rattachés à une commune.</p>
+<p><b>Utilisateur cible</b> : un apiculteur ou un technicien d'un groupement de défense sanitaire apicole (GDSA).
+<b>Décision éclairée</b> : choisir, avant la saison, les communes où poser en priorité les pièges de printemps.</p>
+<div class="question"><b>Question centrale</b> : à quelle vitesse le frelon asiatique progresse-t-il dans les Pays de la Loire,
+et quelles communes ont vu leurs premières observations récemment ?</div>
+
+<div class="kpis">
+  <div class="kpi"><b>454</b><span>communes touchées depuis 2008</span></div>
+  <div class="kpi"><b>9</b><span>communes touchées pour la 1<sup>re</sup> fois en 12 mois</span></div>
+  <div class="kpi"><b>17</b><span>nouvelles communes en 2025</span></div>
+  <div class="kpi"><b>1 539</b><span>observations propres (sur 1 777 collectées)</span></div>
+</div>
+
+<h2>2. Sources de données et conformité</h2>
+<table>
+  <tr><th>Source</th><th>Rôle</th><th>Accès</th><th>Licence</th></tr>
+  <tr><td>GBIF, API <code>occurrence/search</code></td><td>Observations (source principale)</td><td>REST public, sans clé, pagination</td><td>Par ligne : CC0, CC BY 4.0, CC BY-NC 4.0</td></tr>
+  <tr><td>API Géo (Etalab), <code>/communes?codeRegion=52</code></td><td>Contours des 1 228 communes (référentiel)</td><td>REST public, GeoJSON</td><td>Licence Ouverte 2.0</td></tr>
+</table>
+<p>Filtres : espèce <code>taxonKey=1311477</code>, région <code>gadmGid=FRA.12_1</code>. Ce dernier filtre a été préféré au champ
+<code>stateProvince</code>, saisi librement par les fournisseurs et donc peu fiable. La plateforme « Frelon asiatique » du MNHN a été
+écartée : elle n'a pas d'API stable, donc la collecte ne serait pas reproductible (voir ADR-001).</p>
+<p><b>Licences</b> : le projet est non commercial, donc les trois licences sont compatibles. Une règle contrôle la licence de chaque
+ligne, et <code>attributions.csv</code> fournit le titre, le DOI et le lien de chaque jeu de données, comme l'exige CC BY.
+<b>RGPD</b> : la zone raw contient le nom ou le pseudonyme de l'observateur sur 1 609 lignes, parfois une adresse. Ces champs ne servent pas la
+question (principe de minimisation) : ils sont supprimés dès la sortie de la zone raw, et les coordonnées sont arrondies à environ
+100 m. La zone raw n'est jamais versionnée, et une règle vérifie à chaque exécution qu'aucun nom ne fuit dans les sorties.</p>
+
+<h2>3. Architecture finale</h2>
+<figure><img src="../architecture.png" style="width:96%"><figcaption>Figure 1 : pipeline batch, orchestré par <code>pipeline.py</code> (une commande).</figcaption></figure>
+<table>
+  <tr><th>Étape</th><th>Module</th><th>Rôle</th></tr>
+  <tr><td>Collecte</td><td><code>collect.py</code></td><td>Une requête par année (plafond GBIF de 100 000 résultats), pages de 300 lignes, relances exponentielles sur les erreurs 429 et 5xx, balayage complémentaire pour les observations sans année</td></tr>
+  <tr><td>Zone raw</td><td><code>data/raw/</code></td><td>Réponses écrites octet pour octet, plus un <code>manifest.json</code> (requête, comptes annoncés et reçus, horodatage)</td></tr>
+  <tr><td>Profilage</td><td><code>profile_data.py</code></td><td>Types, valeurs manquantes, doublons, plages de valeurs</td></tr>
+  <tr><td>Standardisation</td><td><code>transform.py</code>, <code>reference.py</code></td><td>Dates hétérogènes normalisées (UTC, intervalles, précision), licences normalisées, rattachement à une commune (point dans un polygone)</td></tr>
+  <tr><td>Validation</td><td><code>validate.py</code></td><td>Règles Q01 à Q12 ; lignes invalides dirigées vers la zone rejected, avec leur cause</td></tr>
+  <tr><td>Chargement</td><td><code>load.py</code></td><td>CSV en écriture atomique, SQLite en UPSERT avec suppression logique</td></tr>
+  <tr><td>Restitution</td><td><code>restitution.py</code></td><td>Carte des communes, graphique de progression, indicateurs, rapport d'exécution</td></tr>
+</table>
+
+<h3>Décisions d'architecture (ADR, détail dans <code>docs/adr/</code>)</h3>
+<table>
+  <tr><th>ADR</th><th>Décision</th><th>Alternative principale écartée</th></tr>
+  <tr><td>001</td><td>API GBIF comme source unique d'observations</td><td>Exports manuels de la plateforme MNHN (non reproductibles)</td></tr>
+  <tr><td>002</td><td>CSV + SQLite locaux, sans serveur</td><td>PostgreSQL / PostGIS : disproportionné pour environ 2 000 lignes, et impose une installation</td></tr>
+  <tr><td>003</td><td>Clé métier spatio-temporelle, UPSERT et suppression logique</td><td>Clé <code>gbifID</code> (rate les doublons inter-plateformes) ; base écrasée à chaque exécution (perte d'historique)</td></tr>
+</table>
+
+<h2>4. Collecte reproductible et zone raw</h2>
+<p>Toute la configuration (espèce, zone, seuils, chemins) est dans <code>config/pipeline.yaml</code>, sans secret. La commande
+<code>python src/pipeline.py --collect</code> collecte puis traite tout en environ 30 secondes. La collecte est reproductible et
+vérifiée : une exécution depuis un clone neuf du dépôt donne les mêmes indicateurs. Les erreurs 4xx arrêtent proprement le
+traitement, et les erreurs 429 et 5xx sont relancées avec un délai croissant (2, 4 puis 8 s).</p>
+<p><b>Cas particulier traité</b> : l'API ne permet pas de filtrer sur une année <i>absente</i>. 17 observations sans date exploitable
+n'étaient donc renvoyées par aucune requête annuelle. Un balayage complémentaire sans filtre d'année les récupère : l'extraction ne
+garde de ce balayage que les identifiants absents des tranches annuelles. La règle Q11 vérifie que le total reçu égale le total
+annoncé par GBIF.</p>
+
+<h2>5. Contrat de données, qualité, rejets et doublons</h2>
+<p><b>Grain</b> : <i>une ligne représente un signalement de présence du frelon asiatique en un lieu (arrondi à ~100 m) à une date
+donnée, toutes sources confondues.</i> Le contrat <code>config/data_contract.yaml</code> (v1.0) décrit les 31 champs publiés (type,
+caractère obligatoire, valeurs autorisées), la clé primaire, les champs exclus pour le RGPD et les règles. Le dictionnaire commenté
+avec des exemples est dans <code>docs/fiche_projet.md</code>.</p>
+<table>
+  <tr><th>ID</th><th>Dimension</th><th>Condition</th><th>Action</th><th class="n">Échecs</th></tr>
+  <tr><td>Q01</td><td>Complétude</td><td>Coordonnées présentes</td><td>Rejeter</td><td class="n">0</td></tr>
+  <tr><td>Q02</td><td>Domaine</td><td>Point dans une commune de la région</td><td>Rejeter</td><td class="n">8</td></tr>
+  <tr><td>Q03</td><td>Validité</td><td>Date lisible, ≥ 2004, non future, précision ≤ 1 an</td><td>Rejeter</td><td class="n">16</td></tr>
+  <tr><td>Q04</td><td>Domaine</td><td>Incertitude de localisation ≤ 5 km</td><td>Rejeter</td><td class="n">107</td></tr>
+  <tr><td>Q05</td><td>Validité</td><td>Espèce <i>Vespa velutina</i>, rang espèce ou infra-spécifique</td><td>Rejeter</td><td class="n">0</td></tr>
+  <tr><td>Q06</td><td>Conformité</td><td>Licence CC0, CC BY ou CC BY-NC</td><td>Rejeter</td><td class="n">0</td></tr>
+  <tr><td>Q07</td><td>Cohérence</td><td>Donnée de présence (pas d'absence)</td><td>Rejeter</td><td class="n">0</td></tr>
+  <tr><td>Q08</td><td>Complétude</td><td>Incertitude de localisation renseignée</td><td>Signaler</td><td class="n">343</td></tr>
+  <tr><td>Q09</td><td>Unicité</td><td>Clé métier unique</td><td>Dédoublonner</td><td class="n">109</td></tr>
+  <tr><td>Q10</td><td>Fraîcheur</td><td>Dernière observation de moins de 120 jours</td><td>Alerter</td><td class="n">0 (29 j)</td></tr>
+  <tr><td>Q11</td><td>Complétude</td><td>Reçu = annoncé (tranches + balayage)</td><td>Alerter</td><td class="n">0</td></tr>
+  <tr><td>Q12</td><td>Conformité</td><td>Aucun nom d'observateur dans les sorties</td><td>Alerter, statut FAIL</td><td class="n">0 / 1 002</td></tr>
+</table>
+<p><b>Rejets</b> : les 129 lignes rejetées sont conservées dans <code>data/rejected/rejected_rows.csv</code>, avec la liste des règles
+violées et le fichier raw d'origine. Q04 domine (107 lignes) : au-delà de 5 km d'incertitude, la commune ne peut pas être attribuée de
+façon fiable. Les rejets Q02 sont des points sur l'estran ou juste hors limite, car les contours GADM de GBIF diffèrent légèrement de
+ceux de l'INSEE. Un mode <code>--demo-invalid</code> injecte une ligne piégée par règle (Q01 à Q07) et un faux doublon : chacun est
+intercepté par la règle attendue.</p>
+<p><b>Doublons</b> : une même observation peut arriver par deux plateformes, chacune avec son propre identifiant GBIF. La clé métier
+est un hash SHA-1 de (espèce, jour, latitude et longitude arrondies à 3 décimales). Les lignes de même clé sont fusionnées : on garde la
+localisation la plus précise, puis la licence la plus ouverte, et on conserve les identifiants d'origine. 109 doublons ont été fusionnés ;
+les 20 groupes inter-plateformes sont <b>tous confirmés</b> par l'algorithme de clustering de GBIF, ce qui valide la clé de façon
+indépendante.</p>
+
+<h2>6. Jeu curated, base propre et rapport d'exécution</h2>
+
+
+<p><b>Sorties curated</b> (<code>data/curated/</code>) : <code>observations.csv</code> (1 539 lignes), <code>communes_first_seen.csv</code>
+(une ligne par commune), <code>progression_annuelle.csv</code>, <code>attributions.csv</code>, et la base
+<code>frelon_pdl.sqlite</code>, qui contient les mêmes tables.</p>
+<p><b>Idempotence</b> : les CSV sont écrits de façon atomique (fichier temporaire puis remplacement). La base utilise la clé métier comme
+clé primaire, une contrainte <code>UNIQUE</code> sur l'identifiant GBIF, et un UPSERT. Rejouer le pipeline donne <code>inserted: 0</code>.</p>
+
+
+<p><b>Historisation</b> : une observation retirée de GBIF n'est pas effacée. Elle passe à <code>is_active = 0</code>, avec l'identifiant
+de la collecte de disparition, et elle est réactivée si elle réapparaît. Ce marquage n'a lieu que si la collecte est complète (Q11 à 0),
+pour qu'une collecte partielle ne « supprime » rien à tort. Entre le 23/09 et le 12/10, la base a reçu 9 nouvelles observations,
+sans aucune suppression.</p>
+
+
+<p><b>Rapport d'exécution</b> (<code>reports/run_report.json</code>, historisé dans <code>reports/runs/</code>) : lignes en entrée,
+acceptées, rejetées et fusionnées, échecs par règle, alertes, colonnes personnelles supprimées, indicateurs, statistiques de la base,
+figures produites, durée et statut global. La dernière exécution est en <code>PASS_WITH_WARNINGS</code>, uniquement à cause des 343
+signalements Q08. Le projet compte <b>34 tests unitaires</b> (règles, dates, dédoublonnage, RGPD, pagination, relances, UPSERT,
+historisation, restitution).</p>
+
+<h2>7. Restitution : ce que l'apiculteur obtient</h2>
+<figure><img src="../../reports/figures/carte_communes.png" style="width:80%"><figcaption>Figure 2 : année de première observation par
+commune. En orange, les 9 communes touchées pour la première fois ces 12 derniers mois, où renforcer le piégeage de printemps.</figcaption></figure>
+<figure><img src="../../reports/figures/progression.png" style="width:100%"><figcaption>Figure 3 : nouvelles communes par an et cumul.</figcaption></figure>
+<p><b>Réponse à la question</b> : le frelon a atteint 454 communes de la région. La progression a été rapide entre 2013 et 2018 (environ
+43 nouvelles communes par an), puis apparemment plus lente (4 à 19 par an). Le front actuel se situe surtout en <b>Mayenne</b> et dans la
+<b>Sarthe</b> (6 des 9 communes récentes), avec quelques communes en Vendée. Pour l'apiculteur, <code>communes_first_seen.csv</code>
+donne aussi le nombre d'observations de printemps par commune, utile pour caler la date de pose des pièges.</p>
+
+<h2>8. Limites et améliorations</h2>
+<ul>
+  <li><b>Biais de publication</b> : la baisse après 2018 reflète surtout une baisse des publications vers GBIF (inventaire national), pas un
+  recul de l'espèce. Les signalements de terrain des GDSA n'y figurent pas, et une absence d'observation ne prouve pas une absence de
+  frelon. Ce biais est indiqué sur les figures.</li>
+  <li><b>Clé métier à ~100 m</b> : deux plateformes qui arrondissent différemment la même observation ne sont pas fusionnées. Piste : l'API
+  de clustering de GBIF.</li>
+  <li><b>Attribution</b> : <code>attributions.csv</code> contient 5 noms d'auteurs de jeux de données, exigés par la licence CC BY. C'est une
+  exception documentée au contrôle Q12.</li>
+  <li><b>Passage en production</b> : exécution hebdomadaire planifiée (GitHub Actions), téléchargement GBIF avec DOI pour une citation
+  scientifique, et seconde source de terrain (GDSA).</li>
+</ul>
+
+<h2>9. Installation, exécution et usage de l'IA</h2>
+<pre>git clone https://github.com/behaghelroch-dev/frelon-pdl.git &amp;&amp; cd frelon-pdl
+python -m venv .venv          # puis activer le venv
+pip install -r requirements.txt
+python src/pipeline.py --collect      # collecte + traitement complet (~30 s, ~50 s la 1re fois)
+python src/pipeline.py --demo-invalid # démonstration des règles qualité
+python -m pytest -q                   # 34 tests</pre>
+<p class="note">Python 3.11 ou plus récent, accès Internet, aucune clé d'API. Le README détaille les prérequis, les sorties attendues et le
+dépannage.</p>
+<p><b>Usage de l'IA</b> : un assistant (Claude Code) a été utilisé, notamment pour le balayage complémentaire, l'historisation SQLite, la
+restitution graphique, la vérification depuis un clone neuf, la rédaction des ADR et la mise en forme de cette synthèse. La déclaration
+détaillée est dans le README. Chaque ajout a été exécuté et couvert par des tests.</p>
+
+</body>
+</html>

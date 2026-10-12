@@ -1,5 +1,5 @@
 {
-  "rows": 1767,
+  "rows": 1777,
   "columns": 35,
   "dtypes": {
     "gbifID": "object",
@@ -39,23 +39,23 @@
     "source_file": "object"
   },
   "missing_rate": {
-    "occurrenceRemarks": 0.9728,
-    "individualCount": 0.9377,
-    "lifeStage": 0.8942,
-    "verbatimLocality": 0.8381,
-    "http://unknown.org/nick": 0.8381,
-    "datasetName": 0.8381,
-    "references": 0.8376,
-    "locality": 0.828,
-    "rightsHolder": 0.7759,
-    "institutionCode": 0.6401,
-    "coordinateUncertaintyInMeters": 0.1924,
-    "identifiedBy": 0.1268,
-    "recordedBy": 0.0951,
-    "month": 0.0164,
-    "day": 0.0164,
+    "occurrenceRemarks": 0.973,
+    "individualCount": 0.9381,
+    "lifeStage": 0.8936,
+    "verbatimLocality": 0.8334,
+    "http://unknown.org/nick": 0.8334,
+    "datasetName": 0.8334,
+    "references": 0.8329,
+    "locality": 0.8289,
+    "rightsHolder": 0.7715,
+    "institutionCode": 0.6365,
+    "coordinateUncertaintyInMeters": 0.193,
+    "identifiedBy": 0.1261,
+    "recordedBy": 0.0945,
+    "month": 0.0163,
+    "day": 0.0163,
     "year": 0.0096,
-    "eventDate": 0.0085,
+    "eventDate": 0.0084,
     "occurrenceID": 0.0006,
     "gbifID": 0.0,
     "datasetKey": 0.0,
@@ -103,8 +103,8 @@
   },
   "event_date_formats": {
     "10": 1454,
-    "19": 176,
-    "16": 106,
+    "19": 184,
+    "16": 108,
     "4": 19,
     "21": 10,
     "20": 2
@@ -112,41 +112,41 @@
   "top_values": {
     "datasetName": {
       "<vide>": 1481,
-      "iNaturalist research-grade observations": 286
+      "iNaturalist research-grade observations": 296
     },
     "institutionCode": {
       "<vide>": 1131,
       "CardObs": 345,
-      "iNaturalist": 286,
+      "iNaturalist": 296,
       "UMS PatriNat": 4,
       "NABU|naturgucker": 1
     },
     "basisOfRecord": {
-      "HUMAN_OBSERVATION": 1765,
+      "HUMAN_OBSERVATION": 1775,
       "PRESERVED_SPECIMEN": 2
     },
     "taxonRank": {
-      "SUBSPECIES": 1283,
-      "SPECIES": 484
+      "SUBSPECIES": 1287,
+      "SPECIES": 490
     },
     "license": {
       "http://creativecommons.org/licenses/by/4.0/legalcode": 1060,
-      "http://creativecommons.org/licenses/by-nc/4.0/legalcode": 695,
+      "http://creativecommons.org/licenses/by-nc/4.0/legalcode": 705,
       "http://creativecommons.org/publicdomain/zero/1.0/legalcode": 12
     },
     "occurrenceStatus": {
-      "PRESENT": 1767
+      "PRESENT": 1777
     }
   },
   "personal_fields_filled": {
-    "recordedBy": 1599,
-    "identifiedBy": 1543,
-    "rightsHolder": 396,
-    "http://unknown.org/nick": 286,
-    "verbatimLocality": 286,
+    "recordedBy": 1609,
+    "identifiedBy": 1553,
+    "rightsHolder": 406,
+    "http://unknown.org/nick": 296,
+    "verbatimLocality": 296,
     "locality": 304,
     "occurrenceRemarks": 48,
-    "recordedByIDs": 1767,
-    "identifiedByIDs": 1767
+    "recordedByIDs": 1777,
+    "identifiedByIDs": 1777
   }
 }

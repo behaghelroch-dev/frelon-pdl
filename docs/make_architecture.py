@@ -11,14 +11,14 @@ BOXES = {
     # nom: (x, y, largeur, hauteur, titre, detail, couleur)
     "gbif": (0.2, 4.2, 2.6, 1.3, "GBIF API", "proprietaire : GBIF\nCC0 / CC BY / CC BY-NC", "#dbe8f5"),
     "geo": (0.2, 1.6, 2.6, 1.3, "API Geo (Etalab)", "contours des communes\nLicence Ouverte 2.0", "#dbe8f5"),
-    "collect": (3.6, 4.2, 2.6, 1.3, "Collecteur", "collect.py\npagination par annee\nrelances 429 / 5xx", "#fdebd0"),
+    "collect": (3.6, 4.2, 2.6, 1.3, "Collecteur", "collect.py : 1 requete / annee\n+ balayage complementaire\nrelances 429 / 5xx", "#fdebd0"),
     "raw": (7.0, 4.2, 2.6, 1.3, "Zone raw", "pages JSON non modifiees\n+ manifest.json horodate", "#eeeeee"),
     "ref": (3.6, 1.6, 2.6, 1.3, "Referentiels", "communes_pdl.geojson\nmetadonnees datasets", "#eeeeee"),
-    "valid": (7.0, 1.6, 2.6, 1.3, "Validation", "validate.py\n11 regles de qualite", "#fdebd0"),
+    "valid": (7.0, 1.6, 2.6, 1.3, "Validation", "validate.py\nQ01-Q08 par ligne\nQ09-Q12 dedup / alertes", "#fdebd0"),
     "rejected": (7.0, -0.9, 2.6, 1.3, "Zone rejected", "rejected_rows.csv\n+ cause du rejet", "#f8d7da"),
-    "curated": (10.4, 1.6, 2.6, 1.3, "Zone curated", "dedup + RGPD\nCSV + SQLite (UPSERT)", "#d4edda"),
-    "app": (10.4, 4.2, 2.6, 1.3, "Restitution", "communes nouvellement\ncolonisees, progression", "#d4edda"),
-    "report": (10.4, -0.9, 2.6, 1.3, "Rapport", "run_report.json\nprofile_raw.json", "#eeeeee"),
+    "curated": (10.4, 1.6, 2.6, 1.3, "Zone curated", "dedup + RGPD\nCSV + SQLite (UPSERT,\nsuppression logique)", "#d4edda"),
+    "app": (10.4, 4.2, 2.6, 1.3, "Restitution", "communes_first_seen.csv\ncarte + graphique (PNG)\nrestitution.py", "#d4edda"),
+    "report": (10.4, -0.9, 2.6, 1.3, "Rapport", "run_report.json (statut,\nregles, KPI) + historique", "#eeeeee"),
 }
 ARROWS = [("gbif", "collect"), ("collect", "raw"), ("geo", "ref"), ("raw", "valid"), ("ref", "valid"),
           ("valid", "rejected"), ("valid", "curated"), ("curated", "app"), ("curated", "report")]

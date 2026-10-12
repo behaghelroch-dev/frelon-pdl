@@ -269,3 +269,19 @@ def test_old_database_is_migrated(tmp_path):
             conn.execute(f"ALTER TABLE observations ADD COLUMN {col}")
     stats = upsert_observations(_curated(make_row(gbif_id=1)), db, "run1", True)
     assert stats["marked_removed"] == 1 and _db_rows(db)[99] == (0, None, None, "run1")
+
+
+def test_restitution_writes_map_and_chart(tmp_path):
+    from restitution import render
+    square = lambda x: {"type": "Polygon", "coordinates": [[[x, 47], [x + 0.1, 47], [x + 0.1, 47.1], [x, 47.1], [x, 47]]]}
+    geo = tmp_path / "communes.geojson"
+    geo.write_text(json.dumps({"type": "FeatureCollection", "features": [
+        {"type": "Feature", "properties": {"code": c}, "geometry": square(i * 0.1)}
+        for i, c in enumerate(["49007", "49015", "49020"])]}), encoding="utf-8")
+    communes = pd.DataFrame({"commune_insee": ["49007", "49015"], "commune_nom": ["Angers", "Avrillé"],
+                             "first_year": [2010, 2026], "first_observation_date": ["2010-05-01", "2026-04-02"],
+                             "newly_colonised_last_12_months": [False, True]})
+    progression = pd.DataFrame({"year": [2010, 2026], "n_new_communes": [1, 1], "cumulative_communes": [1, 2]})
+    files = render(communes, progression, geo, tmp_path / "fig", 2026)
+    assert [Path(f).name for f in files] == ["carte_communes.png", "progression.png"]
+    assert all(Path(f).read_bytes()[:4] == b"\x89PNG" for f in files)

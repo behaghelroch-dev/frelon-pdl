@@ -1,14 +1,14 @@
 {
   "pipeline": "frelonwatch-pdl",
-  "executed_at": "2026-09-23T09:31:04Z",
-  "source_run": "gbif_20260923T091718Z",
-  "source_collected_at": "2026-09-23T09:17:18Z",
+  "executed_at": "2026-10-12T09:12:57Z",
+  "source_run": "gbif_20261012T091209Z",
+  "source_collected_at": "2026-10-12T09:12:09Z",
   "demo_invalid_rows_injected": false,
-  "input_rows": 1767,
-  "accepted_rows": 1639,
-  "rejected_rows": 128,
+  "input_rows": 1777,
+  "accepted_rows": 1648,
+  "rejected_rows": 129,
   "duplicates_removed": 109,
-  "curated_rows": 1530,
+  "curated_rows": 1539,
   "deduplication": {
     "technical_duplicates_removed": 0,
     "business_duplicates_removed": 109,
@@ -43,7 +43,7 @@
       "dimension": "Domaine",
       "condition": "incertitude de localisation <= max_uncertainty_m (ou inconnue)",
       "action": "REJETER",
-      "failures": 106
+      "failures": 107
     },
     {
       "rule_id": "Q05_espece_et_rang",
@@ -71,7 +71,7 @@
       "dimension": "Completude",
       "condition": "incertitude de localisation renseignee",
       "action": "SIGNALER",
-      "failures": 340
+      "failures": 343
     },
     {
       "rule_id": "Q09_unicite_cle_metier",
@@ -87,8 +87,8 @@
       "dimension": "Fraicheur",
       "condition": "derniere observation datant de moins de 120 jours",
       "action": "ALERTER",
-      "last_observation": "2026-09-04",
-      "age_days": 19,
+      "last_observation": "2026-09-13",
+      "age_days": 29,
       "failures": 0
     },
     {
@@ -106,7 +106,7 @@
       "dimension": "Conformite",
       "condition": "aucune valeur des champs personnels raw dans les fichiers curated / rejected",
       "action": "ALERTER",
-      "values_checked": 993,
+      "values_checked": 1002,
       "failures": 0
     }
   ],
@@ -122,26 +122,30 @@
       "_pii_recordedByIDs",
       "_pii_identifiedByIDs"
     ],
-    "rows_with_observer_name_in_raw": 1599,
+    "rows_with_observer_name_in_raw": 1609,
     "coordinates_generalised_to_decimals": 3
   },
   "kpi": {
-    "communes_colonised_total": 453,
+    "communes_colonised_total": 454,
     "new_communes_2025": 17,
     "new_communes_per_year_avg_last_5_years": 12.8,
-    "communes_newly_colonised_last_12_months": 8
+    "communes_newly_colonised_last_12_months": 9
   },
   "database": {
-    "rows_before": 1530,
-    "rows_after": 1530,
+    "rows_before": 1539,
+    "rows_after": 1539,
     "inserted": 0,
-    "updated_or_unchanged": 1530,
+    "updated_or_unchanged": 1539,
     "rekeyed_replaced": 0,
     "reactivated": 0,
     "snapshot_complete": true,
     "marked_removed": 0,
-    "active_rows": 1530
+    "active_rows": 1539
   },
+  "figures": [
+    "reports/figures/carte_communes.png",
+    "reports/figures/progression.png"
+  ],
   "quality_status": "PASS_WITH_WARNINGS",
-  "duration_seconds": 2.05
+  "duration_seconds": 3.49
 }
